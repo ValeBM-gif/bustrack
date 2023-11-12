@@ -8,7 +8,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart' as maps;
 import 'package:google_places_flutter/model/prediction.dart';
 
 class RutasListView extends StatefulWidget {
-  final void Function(int, maps.LatLng, maps.LatLng?, bool, maps.LatLng?, maps.LatLng?, bool, Ruta?, Prediction?) irAMapa;
+  final void Function(int, maps.LatLng?, bool, maps.LatLng?, maps.LatLng?, bool, Ruta?, Prediction?) irAMapa;
   final Function setRutaActual;
   const RutasListView({super.key, required this.irAMapa, required this.setRutaActual});
 
@@ -30,7 +30,7 @@ class _RutasListViewState extends State<RutasListView> {
               child: ListTile(
                 onTap: (){
                   print('que ruta hay? ${ruta.nombre}');
-                  widget.irAMapa(1, userLocation!, null, false, ruta.posicion1, ruta.posicion2, true, ruta, null);
+                  widget.irAMapa(1, null, false, ruta.posicion1, ruta.posicion2, true, ruta, null);
                   widget.setRutaActual(ruta);
                 },
                 leading: Column(

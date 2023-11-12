@@ -71,9 +71,8 @@ class _MyAppState extends State<MyApp> {
   int _currenPagetIndex = 0;
 
   void _cambiarDeScreen(
-  int index, LatLng userLoc, LatLng? destinoLoc, bool camaraAutomatica, LatLng?  inRuta, LatLng?  fRuta, bool showRuta, Ruta? ruta, Prediction? prediction) {
+  int index, LatLng? destinoLoc, bool camaraAutomatica, LatLng?  inRuta, LatLng?  fRuta, bool showRuta, Ruta? ruta, Prediction? prediction) {
     setState(() {
-      userLocation = userLoc;
       destinoLocation = destinoLoc;
       _currenPagetIndex = index;
       mostrarCamaraAutomatica = camaraAutomatica;
@@ -104,7 +103,6 @@ class _MyAppState extends State<MyApp> {
         '/mapa': (context) => MapScreen(
               tiempoDeLlegada: 1,
               posicionDeDestino: destinoLocation,
-              posicionUsuario: userLocation ?? const LatLng(20.15, -100.7),
               mostrarCamaraPosicionUsuario: mostrarCamaraAutomatica,
               posicionCamara:
                   mostrarCamaraAutomatica ? userLocation! : destinoLocation!=null?destinoLocation!:inicioRuta!,
@@ -128,7 +126,7 @@ class _MyAppState extends State<MyApp> {
             currentIndex: _currenPagetIndex,
             onTap: (index) {
               _cambiarDeScreen(index,
-                  userLocation ?? const LatLng(20.15, -100.7), null, true, inicioRuta,finRuta, mostrarRuta, null, null);
+                   null, true, inicioRuta,finRuta, mostrarRuta, null, null);
             },
             items: const [
               BottomNavigationBarItem(
@@ -163,10 +161,10 @@ class _MyAppState extends State<MyApp> {
               MapScreen(
                 tiempoDeLlegada: 15,
                 posicionDeDestino: destinoLocation,
-                posicionUsuario: userLocation ?? const LatLng(20.15, -100.7),
                 mostrarCamaraPosicionUsuario: mostrarCamaraAutomatica,
                 posicionCamara:
-                    mostrarCamaraAutomatica ? userLocation! : destinoLocation!=null?destinoLocation!:inicioRuta!,
+                mostrarCamaraAutomatica ? userLocation! : destinoLocation !=
+                    null ? destinoLocation! : inicioRuta!,
                 mostrarRuta: mostrarRuta,
                 posicionInicioRuta: inicioRuta,
                 posicionFinRuta: finRuta,

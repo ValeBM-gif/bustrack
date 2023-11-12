@@ -1,3 +1,4 @@
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as maps;
 
 
@@ -8,6 +9,7 @@ class Ruta {
   TipoDeRuta? tipo;
   maps.LatLng? posicion1;
   maps.LatLng? posicion2;
+  List<PolylineWayPoint>? puntosDeRuta;
 
   Ruta({
     required this.id,
@@ -15,7 +17,8 @@ class Ruta {
     required this.direccion,
     this.tipo,
     this.posicion1,
-    this.posicion2
+    this.posicion2,
+    this.puntosDeRuta
   });
 }
 
@@ -32,8 +35,24 @@ List<Ruta> rutas = [
       nombre: 'L1',
       direccion: 'San Jerónimo - Delta por Blvr. A. López Mateos',
       tipo: TipoDeRuta.troncal,
-      posicion1: maps.LatLng(21.1445607, -101.6735626),
-      posicion2: maps.LatLng(21.1358256, -101.6783201)
+      posicion1: maps.LatLng(21.149740, -101.675124),
+      posicion2: maps.LatLng(21.095032, -101.616753),
+      puntosDeRuta: [
+        PolylineWayPoint(location: "21.149740, -101.675124",), 
+        PolylineWayPoint(location: "21.147860, -101.677145",),
+        PolylineWayPoint(location: "21.147404, -101.681210"),
+        PolylineWayPoint(location: "21.147187, -101.684586"),
+        PolylineWayPoint(location: "21.144113, -101.685584"),
+        PolylineWayPoint(location: "21.138683, -101.686643"),
+        PolylineWayPoint(location: "21.131212, -101.687910"),
+        PolylineWayPoint(location: "21.127533, -101.686557"),
+        PolylineWayPoint(location: "21.126639, -101.684842"),
+        PolylineWayPoint(location: "21.123580, -101.676720"),
+        PolylineWayPoint(location: "21.092751, -101.623347"),
+        PolylineWayPoint(location: "21.089984, -101.620207"),
+        PolylineWayPoint(location: "21.093855, -101.617333"),
+        PolylineWayPoint(location: "21.095032, -101.616753"),
+      ]
   ),
   Ruta(
       id: 2,

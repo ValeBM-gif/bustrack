@@ -31,7 +31,7 @@ Future<List> getSugerenciasLugares(String input) async {
 }
 
 class HomeScreen extends StatefulWidget {
-  final void Function(int, maps.LatLng, maps.LatLng, bool, maps.LatLng?,
+  final void Function(int, maps.LatLng, bool, maps.LatLng?,
       maps.LatLng?, bool, Ruta?, Prediction?) irAMapa;
   const HomeScreen({
     super.key,
@@ -168,7 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         TextPosition(offset: prediction.description!.length));
 
                     await getPlaceDetails(prediction.placeId!);
-                    widget.irAMapa(1, userLocation!, searchedLoc, false, null,
+                    widget.irAMapa(1, searchedLoc, false, null,
                         null, false, null, prediction);
                     FocusManager.instance.primaryFocus?.unfocus();
                   },
