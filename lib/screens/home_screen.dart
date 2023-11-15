@@ -1,6 +1,7 @@
 //APIIIII: AIzaSyAVmAwz26C4R61AE2vJfnT2uRif6CjepoY
 import 'dart:convert';
 import 'package:bustrackk/main.dart';
+import 'package:bustrackk/screens/loginBus_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_places_flutter/model/prediction.dart';
 import '../constants.dart';
@@ -31,8 +32,8 @@ Future<List> getSugerenciasLugares(String input) async {
 }
 
 class HomeScreen extends StatefulWidget {
-  final void Function(int, maps.LatLng, bool, maps.LatLng?,
-      maps.LatLng?, bool, Ruta?, Prediction?) irAMapa;
+  final void Function(int, maps.LatLng, bool, maps.LatLng?, maps.LatLng?, bool,
+      Ruta?, Prediction?) irAMapa;
   const HomeScreen({
     super.key,
     required this.irAMapa,
@@ -97,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-             Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Column(
@@ -126,7 +127,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 Padding(
                   padding: EdgeInsets.only(right: 78.0),
-                  child: Icon(Icons.directions_bus_rounded, size: 60, color: Colors.grey.shade300,),
+                  child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) {
+                              return LoginBusScreen();
+                            },
+                          ),
+                        );
+                      },
+                      child: Icon(
+                        Icons.directions_bus_rounded,
+                        size: 60,
+                        color: Colors.grey.shade300,
+                      )),
                 )
               ],
             ),
@@ -168,8 +184,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         TextPosition(offset: prediction.description!.length));
 
                     await getPlaceDetails(prediction.placeId!);
-                    widget.irAMapa(1, searchedLoc, false, null,
-                        null, false, null, prediction);
+                    widget.irAMapa(1, searchedLoc, false, null, null, false,
+                        null, prediction);
                     FocusManager.instance.primaryFocus?.unfocus();
                   },
                   // if we want to make custom list item builder

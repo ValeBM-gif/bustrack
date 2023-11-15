@@ -43,6 +43,13 @@ dependencies:
   geolocator: ^10.1.0
   google_map_polyline_new: ^0.3.0+2
   flutter_polyline_points: ^2.0.0
+  fluttertoast: ^8.2.4
+  firebase_core: ^2.21.0
+  firebase_database: ^10.2.5
+  flutter_geofire: ^2.0.3
+  location: ^5.0.3
+  #location: ^5.0.2+1
+  cloud_firestore: ^4.9.1
 
 dev_dependencies:
   flutter_test:
