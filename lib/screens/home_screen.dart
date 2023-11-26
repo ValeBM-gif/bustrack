@@ -1,7 +1,11 @@
 //APIIIII: AIzaSyAVmAwz26C4R61AE2vJfnT2uRif6CjepoY
 import 'dart:convert';
+import 'dart:ffi';
 import 'package:bustrackk/main.dart';
+import 'package:bustrackk/models/parada.dart';
 import 'package:bustrackk/screens/loginBus_screen.dart';
+import 'package:bustrackk/screens/map_screen.dart';
+import 'package:bustrackk/widgets/home_ruta_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:google_places_flutter/model/prediction.dart';
 import '../constants.dart';
@@ -11,6 +15,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart' as maps;
 import 'package:http/http.dart' as http;
 
 import '../models/ruta.dart';
+import '../widgets/rutas_list_view.dart';
 
 Future<List> getSugerenciasLugares(String input) async {
   String url =
@@ -32,11 +37,8 @@ Future<List> getSugerenciasLugares(String input) async {
 }
 
 class HomeScreen extends StatefulWidget {
-  final void Function(int, maps.LatLng, bool, maps.LatLng?, maps.LatLng?, bool,
-      Ruta?, Prediction?) irAMapa;
   const HomeScreen({
     super.key,
-    required this.irAMapa,
   });
 
   @override
@@ -45,10 +47,10 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late maps.LatLng searchedLoc;
+  bool mostrarOpcionesRutas = false;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
   }
 
@@ -59,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (response.statusCode == 200) {
-      print('respuesta');
+      print('ya hay respuesta, 200');
       print(response.body);
 
       Map<String, dynamic> json = jsonDecode(response.body);
@@ -85,7 +87,58 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //backgroundColor: Colors.black87,
+      appBar: AppBar(
+        iconTheme: const IconThemeData(color: kIconsColor),
+        actions: [
+          GestureDetector(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10.0),
+              child: GestureDetector(
+                onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context){return MapScreen(posicionCamara: userLocation!, deDondeProviene: 1, paradas: paradas,);},),);
+                },
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                      border: Border.all(color: Colors.white38, width: 1.3),
+                      borderRadius: const BorderRadius.all(Radius.circular(9))),
+                  child: const Icon(
+                    Icons.map_outlined,
+                    color: kIconsColor,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(
+            width: 9,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10.0),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(context, '/rutas');
+              },
+              child: Container(
+                height: 40,
+                width: 40,
+                decoration: BoxDecoration(
+                    border: Border.all(color: Colors.white38, width: 1.3),
+                    borderRadius: const BorderRadius.all(Radius.circular(9))),
+                child: const Icon(
+                  Icons.alt_route,
+                  color: kIconsColor,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 12,
+          ),
+        ],
+      ),
+      backgroundColor: colorScaffold,
       resizeToAvoidBottomInset: false,
       drawer: Drawer(
         child: Container(
@@ -93,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(25.0),
+        padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 5),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,29 +154,29 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      height: 20,
-                    ),
-                    Text(
-                      'Bustrack',
-                      textAlign: TextAlign.start,
-                      style: kTextStyleTitles,
-                    ),
-                    Text(
-                      'Movilidad eficiente para ti.',
-                      style: TextStyle(
-                          fontSize: 16,
-                          color: kPrimaryColor,
-                          fontWeight: FontWeight.w500),
-                      textAlign: TextAlign.start,
-                    ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                  ],
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Bustrack',
+                        textAlign: TextAlign.start,
+                        style: kTextStyleTitles,
+                      ),
+                      Text(
+                        'Movilidad eficiente para ti.',
+                        style: TextStyle(
+                            letterSpacing: 1,
+                            fontSize: 14,
+                            color: kPrimaryColor,
+                            fontWeight: FontWeight.w500),
+                        textAlign: TextAlign.start,
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                    ],
+                  ),
                 ),
                 Padding(
                   padding: EdgeInsets.only(right: 78.0),
@@ -149,25 +202,25 @@ class _HomeScreenState extends State<HomeScreen> {
             Container(
               width: double.infinity,
               height: 3,
-              color: kPrimaryColor,
+              color: kSecondaryColor,
             ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 14.0),
               child: SizedBox(
                 width: 500,
-                height: 50,
+                //height: 50,
                 child: GooglePlaceAutoCompleteTextField(
-                  textStyle: TextStyle(color: Colors.white),
+                  textStyle: const TextStyle(color: Colors.white),
                   boxDecoration: BoxDecoration(
                     shape: BoxShape.rectangle,
                     color: Colors.grey.shade700,
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   textEditingController: controller,
                   googleAPIKey: "AIzaSyAVmAwz26C4R61AE2vJfnT2uRif6CjepoY",
                   inputDecoration: const InputDecoration(
                       border: InputBorder.none,
-                      hintText: '¿A dónde quieres ir?'),
+                      hintText: ' ¿A dónde quieres ir?'),
                   debounceTime: 800,
                   // default 600 ms,
                   countries: const ["mx"],
@@ -184,11 +237,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         TextPosition(offset: prediction.description!.length));
 
                     await getPlaceDetails(prediction.placeId!);
-                    widget.irAMapa(1, searchedLoc, false, null, null, false,
-                        null, prediction);
+                    print('ya paso getPlaceDetails');
+
+                    mostrarOpcionesRutas=true;
+                    prediccionElegida=prediction;
+                    print('prediccionElegida ya tiene algo $prediccionElegida');
+                    setState(() {});
                     FocusManager.instance.primaryFocus?.unfocus();
+                    //Navigator.pushNamed(context, '/mapa');
+                    //controller.text = '';
                   },
-                  // if we want to make custom list item builder
                   itemBuilder: (context, index, Prediction prediction) {
                     return Container(
                       color: Colors.grey.shade900,
@@ -210,32 +268,58 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     );
-                  }
-                  // if you want to add seperator between list items
-                  ,
-                  seperatedBuilder: Divider(
+                  },
+                  seperatedBuilder: const Divider(
                     height: 0,
                   ),
-                  // want to show close icon
                   isCrossBtnShown: true,
                 ),
               ),
             ),
-            Expanded(
-                child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 78.0),
-                  child: Center(
-                    child: Image.asset(
-                      'assets/images/parada.png',
-                      height: 230,
-                      width: 230,
+            mostrarOpcionesRutas
+                ? prediccionElegida!=null?Column(
+                    children: [
+                      HomeRutaTile(
+                        ruta: rutas.firstWhere((element) => element.id==10),
+                        prediction: prediccionElegida!,
+                        coordenadasDestino: maps.LatLng(
+                          double.parse(prediccionElegida!.lat!),
+                          double.parse(prediccionElegida!.lng!),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      HomeRutaTile(
+                        ruta: rutas.firstWhere((element) => element.id==11),
+                        prediction: prediccionElegida!,
+                        coordenadasDestino: maps.LatLng(
+                          double.parse(prediccionElegida!.lat!),
+                          double.parse(prediccionElegida!.lng!),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      HomeRutaTile(
+                        ruta: rutas.firstWhere((element) => element.id==2),
+                        prediction: prediccionElegida!,
+                        coordenadasDestino: maps.LatLng(
+                          double.parse(prediccionElegida!.lat!),
+                          double.parse(prediccionElegida!.lng!),
+                        ),
+                      ),
+                    ],
+                  ):const Center(child: CircularProgressIndicator(),)
+                : Expanded(
+                    child: Center(
+                      child: Image.asset(
+                        'assets/images/parada.png',
+                        height: 230,
+                        width: 230,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            )),
           ],
         ),
       ),

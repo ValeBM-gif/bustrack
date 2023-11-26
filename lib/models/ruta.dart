@@ -118,4 +118,28 @@ List<Ruta> rutas = [
       posicion1: maps.LatLng(21.1445607, -101.6735626),
       posicion2: maps.LatLng(21.1358256, -101.6783201)
   ),
+  Ruta(
+      id: 10,
+      nombre: 'A-82',
+      direccion: 'Col. Urbi Villa Del Roble - Terminal San Juan Bosco',
+      tipo: TipoDeRuta.alimentadora,
+      posicion1: const maps.LatLng(21.165827, -101.760463),
+      posicion2: const maps.LatLng(21.131095, -101.715344)
+  ),
+  Ruta(
+      id: 11,
+      nombre: 'A-91',
+      direccion: 'Col. Paseo del Country - Terminal San Juan Bosco',
+      tipo: TipoDeRuta.alimentadora,
+      posicion1: const maps.LatLng(21.153727, -101.731702),
+      posicion2: const maps.LatLng(21.131095, -101.715344)
+  ),
+  Ruta(
+      id: 12,
+      nombre: 'A-31',
+      direccion: 'Terminal San Juan Bosco - Col. Colinas de la Fragua',
+      tipo: TipoDeRuta.alimentadora,
+      posicion1: const maps.LatLng(21.153466, -101.743129),
+      posicion2: const maps.LatLng(21.128305, -101.714448)
+  ),
 ];

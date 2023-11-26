@@ -1,4 +1,5 @@
 import 'package:bustrackk/models/ruta.dart';
+import 'package:bustrackk/providers/bus_location_provider.dart';
 import 'package:bustrackk/screens/home_screen.dart';
 import 'package:bustrackk/screens/map_screen.dart';
 import 'package:bustrackk/screens/routes_screen.dart';
@@ -8,6 +9,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
 import 'constants.dart';
+import 'package:provider/provider.dart';
+
 
 String apiKey = 'AIzaSyAVmAwz26C4R61AE2vJfnT2uRif6CjepoY';
 LatLng? userLocation = LatLng(21.125012, -101.685966);
@@ -22,7 +25,10 @@ Prediction? prediccionElegida;
 void main()async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(MyApp());
+  final busLocationProviderProvider = BusLocationProvider();
+  runApp(MultiProvider(
+    providers: [ChangeNotifierProvider.value(value: busLocationProviderProvider),],
+    child: MyApp()));
 }
 
 class MyApp extends StatefulWidget {
@@ -71,21 +77,6 @@ class _MyAppState extends State<MyApp> {
     print('asigna user loc: ${pos.latitude}, ${pos.longitude}');
   }
 
-  int _currenPagetIndex = 0;
-
-  void _cambiarDeScreen(
-  int index, LatLng? destinoLoc, bool camaraAutomatica, LatLng?  inRuta, LatLng?  fRuta, bool showRuta, Ruta? ruta, Prediction? prediction) {
-    setState(() {
-      destinoLocation = destinoLoc;
-      _currenPagetIndex = index;
-      mostrarCamaraAutomatica = camaraAutomatica;
-      inicioRuta=inRuta;
-      finRuta=fRuta;
-      mostrarRuta=showRuta;
-      rutaAMostrar=ruta;
-      prediccionElegida=prediction;
-    });
-  }
 
   @override
   void initState() {
@@ -103,82 +94,11 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       theme: ThemeData.dark(),
       routes: {
-        '/mapa': (context) => MapScreen(
-              tiempoDeLlegada: 1,
-              posicionDeDestino: destinoLocation,
-              mostrarCamaraPosicionUsuario: mostrarCamaraAutomatica,
-              posicionCamara:
-                  mostrarCamaraAutomatica ? userLocation! : destinoLocation!=null?destinoLocation!:inicioRuta!,
-              mostrarRuta: mostrarRuta,
-              posicionFinRuta: finRuta,
-              posicionInicioRuta: inicioRuta,
-          ruta: rutaAMostrar,
-          prediction: prediccionElegida,
-            ),
-        '/rutas': (context) => RoutesScreen(irAMapa: _cambiarDeScreen),
+        '/rutas': (context) => RoutesScreen(),
       },
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      home: DefaultTabController(
-        length: 3,
-        child: Scaffold(
-          // This is handled by the search bar itself.
-          resizeToAvoidBottomInset: false,
-          bottomNavigationBar: BottomNavigationBar(
-            backgroundColor: Colors.black.withAlpha(230),
-            currentIndex: _currenPagetIndex,
-            onTap: (index) {
-              _cambiarDeScreen(index,
-                   null, true, inicioRuta,finRuta, mostrarRuta, null, null);
-            },
-            items: const [
-              BottomNavigationBarItem(
-                label: '',
-                icon: Icon(
-                  Icons.home,
-                  color: kPrimaryColor,
-                ),
-              ),
-              BottomNavigationBarItem(
-                label: '',
-                icon: Icon(
-                  Icons.map,
-                  color: kPrimaryColor,
-                ),
-              ),
-              BottomNavigationBarItem(
-                label: '',
-                icon: Icon(
-                  Icons.alt_route,
-                  color: kPrimaryColor,
-                ),
-              ),
-            ],
-          ),
-          body: IndexedStack(
-            index: _currenPagetIndex,
-            children: [
-              HomeScreen(
-                irAMapa: _cambiarDeScreen,
-              ),
-              MapScreen(
-                tiempoDeLlegada: 15,
-                posicionDeDestino: destinoLocation,
-                mostrarCamaraPosicionUsuario: mostrarCamaraAutomatica,
-                posicionCamara:
-                mostrarCamaraAutomatica ? userLocation! : destinoLocation !=
-                    null ? destinoLocation! : inicioRuta!,
-                mostrarRuta: mostrarRuta,
-                posicionInicioRuta: inicioRuta,
-                posicionFinRuta: finRuta,
-                ruta: rutaAMostrar,
-                prediction: prediccionElegida,
-              ),
-              RoutesScreen(irAMapa: _cambiarDeScreen),
-            ],
-          )
-        ),
-      ),
+      home: const HomeScreen()
     );
   }
 }

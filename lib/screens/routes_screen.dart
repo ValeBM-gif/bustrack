@@ -7,9 +7,7 @@ import '../constants.dart';
 import '../models/ruta.dart';
 
 class RoutesScreen extends StatefulWidget {
-  final void Function(int, maps.LatLng?, bool, maps.LatLng?,
-      maps.LatLng?, bool, Ruta?, Prediction?) irAMapa;
-  const RoutesScreen({super.key,required this.irAMapa});
+  const RoutesScreen({super.key});
 
   @override
   State<RoutesScreen> createState() => _RoutesScreenState();
@@ -49,7 +47,6 @@ class _RoutesScreenState extends State<RoutesScreen> {
               const SizedBox(height: 5,),
               Expanded(
                   child: RutasListView(
-                irAMapa: widget.irAMapa,
                 setRutaActual: () {},
               )),
             ],

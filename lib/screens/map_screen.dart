@@ -1,41 +1,34 @@
 import 'dart:async';
+import 'package:bustrackk/providers/bus_location_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:ui' as ui;
-import 'dart:typed_data';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
-import 'package:google_map_polyline_new/google_map_polyline_new.dart' as poly;
 import 'package:google_maps_flutter/google_maps_flutter.dart' as maps;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
+import 'package:provider/provider.dart';
 import '../constants.dart';
 import '../main.dart';
 import '../models/parada.dart';
 import '../models/ruta.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 class MapScreen extends StatefulWidget {
-  double? tiempoDeLlegada;
-  maps.LatLng posicionCamara;
+  final maps.LatLng posicionCamara;
   maps.LatLng? posicionDeDestino;
-  maps.LatLng? posicionInicioRuta;
-  maps.LatLng? posicionFinRuta;
-  bool mostrarCamaraPosicionUsuario;
-  bool mostrarRuta;
+  final int deDondeProviene; //1 solo mapa, 2 destino (search bar), 3 rutas
   Ruta? ruta;
   Prediction? prediction;
+  List<Parada>? paradas;
 
-  MapScreen({
-    super.key,
-    required this.tiempoDeLlegada,
-    this.posicionDeDestino,
-    required this.mostrarCamaraPosicionUsuario,
-    required this.posicionCamara,
-    required this.mostrarRuta,
-    this.posicionFinRuta,
-    this.posicionInicioRuta,
-    this.ruta,
-    this.prediction,
-  });
+  MapScreen(
+      {super.key,
+      required this.posicionCamara,
+      this.ruta,
+      this.prediction,
+      required this.deDondeProviene,
+      this.paradas});
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -48,9 +41,9 @@ class _MapScreenState extends State<MapScreen> {
   late List<maps.Marker> _marcadores = [];
 
   late String _darkMapStyle;
-
-  List<maps.LatLng> routeCoords = [];
-  //Map<PolylineId, maps.Polyline> polylines = {};
+  late Timer _timer;
+  //todo: cehcar pq esto no funciona
+  late BitmapDescriptor markerIcon;
 
   Set<maps.Polyline> _polyline = {};
 
@@ -61,26 +54,29 @@ class _MapScreenState extends State<MapScreen> {
     _loadMapStyles();
     _setMapStyle();
     generarMarkers();
+    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (context.read<BusLocationProvider>().getBusLoc != null) {
+        generarBusMarkers();
+      }
+    });
   }
 
   void inicializarDatosMapa() async {
-    //Camera Position
-    //_polyline = {};
-    if (widget.mostrarRuta) {
-      widget.posicionCamara = widget.posicionInicioRuta!;
-    } else {
-      if (widget.mostrarCamaraPosicionUsuario) {
-        widget.posicionCamara = userLocation!;
-      } else {
-        widget.posicionCamara = widget.posicionDeDestino!;
-      }
-    }
-
     _posicionCamara = maps.CameraPosition(
       target: maps.LatLng(
           widget.posicionCamara!.latitude, widget.posicionCamara!.longitude),
       zoom: 14.4746,
     );
+
+    BusLocationProvider busLocationProvider = BusLocationProvider();
+    await busLocationProvider.initFromFirebase();
+
+    BitmapDescriptor.fromAssetImage(
+            const ImageConfiguration(
+              size: Size(48, 48),
+            ),
+            'assets/images/autobus.png')
+        .then((value) => markerIcon = value);
   }
 
   Future _loadMapStyles() async {
@@ -95,50 +91,68 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> generarMarkers() async {
-    //IR A MAPA POR SEARCH BAR
-    print('de donde venimos');
-    print('clic normal en mapa ${widget.mostrarCamaraPosicionUsuario}');
-    print('rutas page ${widget.mostrarRuta}');
-    if (!widget.mostrarRuta) {
-      if (!widget.mostrarCamaraPosicionUsuario) {
-        _marcadores.add(
-          maps.Marker(
-            markerId: const maps.MarkerId('2'),
-            position: widget
-                .posicionDeDestino!, // Latitud y longitud del nuevo marcador
-            infoWindow: const maps.InfoWindow(
-              title: 'Ubicación buscada',
-            ),
+    if (widget.deDondeProviene == 2) {
+      _marcadores.add(
+        maps.Marker(
+          markerId: const maps.MarkerId('2'),
+          position:
+              _posicionCamara.target, // Latitud y longitud del nuevo marcador
+          infoWindow: maps.InfoWindow(
+            title: widget.prediction!.description,
           ),
-        );
-      }
+        ),
+      );
+      //todo: marker de paradas o puntos necesaries para llegar a destino
+    } else {
+      //MARKERS POR PARADA
+      // for (var parada in widget.paradas) {
+      //   _marcadores.add(
+      //     maps.Marker(
+      //       //icon: BitmapDescriptor.fromBytes(customMarker),
+      //       markerId: maps.MarkerId('${parada.id}'),
+      //       position: parada.posicion,
+      //       infoWindow: maps.InfoWindow(
+      //         title: parada.direccion,
+      //       ),
+      //     ),
+      //   );
+      // }
+      //todo: checar que paradas vamos a hardcodear
+      //todo: generar markers de paradas dentro de la ruta seleccionada
     }
+  }
 
-    //MARKERS POR PARADA
-    // for (var parada in paradas) {
-    //   _marcadores.add(
-    //     maps.Marker(
-    //       //icon: BitmapDescriptor.fromBytes(customMarker),
-    //       markerId: maps.MarkerId('${parada.id}'),
-    //       position: parada.posicion,
-    //       infoWindow: maps.InfoWindow(
-    //         title: parada.direccion,
-    //       ),
-    //     ),
-    //   );
-    // }
+  void generarBusMarkers() {
+    print('generarBusMarkers');
+    _marcadores.add(
+      maps.Marker(
+        icon: markerIcon,
+        markerId: const maps.MarkerId('0'),
+        position: maps.LatLng(
+            context.read<BusLocationProvider>().getBusLoc!.latitude!,
+            context
+                .read<BusLocationProvider>()
+                .getBusLoc!
+                .longitude!), // Latitud y longitud del nuevo marcador
+        infoWindow: const maps.InfoWindow(
+          title: 'Camionsito está aquí:)',
+        ),
+      ),
+    );
   }
 
   //DUDOSO
   // This functions gets real road polyline routes
   getDirections(inicio, fin) async {
     List<LatLng> polylineCoordinates = [];
-    List<PolylineWayPoint> polylineWayPoints = [];
 
-    polylineWayPoints.add(
-        PolylineWayPoint(location: "21.124986, -101.685913", stopOver: true));
-    polylineWayPoints.add(
-        PolylineWayPoint(location: "20.748305, -101.453808", stopOver: true));
+    //PUNTOS ESPECÍFICOS POR LOS QUE TIENE QUE PASAR
+    //List<PolylineWayPoint> polylineWayPoints = [];
+
+    // polylineWayPoints.add(
+    //     PolylineWayPoint(location: "21.124986, -101.685913", stopOver: true));
+    // polylineWayPoints.add(
+    //     PolylineWayPoint(location: "20.748305, -101.453808", stopOver: true));
 
     PolylinePoints polylinePoints = PolylinePoints();
 
@@ -179,7 +193,7 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void didUpdateWidget(covariant MapScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.posicionCamara != oldWidget.posicionCamara) {
+    if (_posicionCamara != _posicionCamara) {
       actualizarCamara();
     }
   }
@@ -187,47 +201,65 @@ class _MapScreenState extends State<MapScreen> {
   void actualizarCamara() async {
     final maps.GoogleMapController controller = await _mapController.future;
     controller
-        .animateCamera(maps.CameraUpdate.newLatLng(widget.posicionCamara));
+        .animateCamera(maps.CameraUpdate.newLatLng(_posicionCamara.target));
   }
 
   @override
   void dispose() {
-    _marcadores.removeWhere((marker) => marker.markerId == '2');
+    _marcadores.clear();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context){
-    inicializarDatosMapa();
-
+  Widget build(BuildContext context) {
     //SI LLEGAMOS A TRAVÉS DE SEARCH BAR
-    if (!widget.mostrarRuta) {
-      if (!widget.mostrarCamaraPosicionUsuario) {
-        generarMarkers();
-        getDirections(PointLatLng(userLocation!.latitude, userLocation!.longitude), PointLatLng(widget.posicionDeDestino!.latitude, widget.posicionDeDestino!.longitude));
-        print(_polyline);
-        print("polis");
+    if (widget.deDondeProviene != 1) {
+      getDirections(
+        PointLatLng(widget.ruta!.posicion1!.latitude,
+            widget.ruta!.posicion1!.longitude),
+        PointLatLng(widget.ruta!.posicion2!.latitude,
+            widget.ruta!.posicion2!.longitude),
+      );
+      if (widget.deDondeProviene == 2) {
+        //todo: hacer polyline de camino a tomar para llegar a destino
       }
-    } else {
-      getDirections(PointLatLng(widget.posicionInicioRuta!.latitude, widget.posicionInicioRuta!.longitude), PointLatLng(widget.posicionFinRuta!.latitude, widget.posicionFinRuta!.longitude));
-      print('polis: $_polyline');
     }
 
     return Scaffold(
-        appBar: AppBar(
-          title: Column(
-            children: [
-              Text(
-                widget.mostrarCamaraPosicionUsuario
-                    ? 'Paradas Cercanas'
-                    : widget.mostrarRuta
-                        ? 'Ruta ${widget.ruta!.nombre}'
-                        : widget.prediction!.description!,
-                style: TextStyle(color: Colors.black),
-              ),
-            ],
+      appBar: AppBar(
+        iconTheme: const IconThemeData(
+          color: Colors.white60, //change your color here
+        ),
+        title: SizedBox(
+          width: 250,
+          child: Text(
+            widget.deDondeProviene == 1
+                ? 'Paradas Cercanas'
+                : widget.deDondeProviene == 3
+                    ? 'Ruta ${widget.ruta!.nombre}'
+                    : widget.prediction!.description!,
+            style: const TextStyle(
+                color: Colors.white60,
+                fontSize: 16,
+                fontWeight: FontWeight.bold),
           ),
-          backgroundColor: kPrimaryColor,
+        ),
+      ),
+      body: SlidingUpPanel(
+        slideDirection: SlideDirection.DOWN,
+        backdropColor: Colors.pink,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+        color: Colors.black54,
+        border: const Border(
+            bottom: BorderSide(color:Colors.transparent, width: 3),
+            left: BorderSide(color: Colors.transparent, width: 3),
+            right: BorderSide(color: Colors.transparent, width: 3)),
+        borderRadius: const BorderRadius.only(
+            bottomRight: Radius.circular(25), bottomLeft: Radius.circular(25)),
+        minHeight: widget.deDondeProviene == 1 ? 0 : 20,
+        maxHeight: 240,
+        panel: Center(
+          child: Text('panel'),
         ),
         body: maps.GoogleMap(
           onMapCreated: (maps.GoogleMapController controller) {
@@ -241,6 +273,8 @@ class _MapScreenState extends State<MapScreen> {
           myLocationButtonEnabled: true,
           compassEnabled: true,
           //polylines: Set.from(polylines),
-        ));
+        ),
+      ),
+    );
   }
 }
