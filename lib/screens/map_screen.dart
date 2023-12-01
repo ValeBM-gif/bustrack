@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:bustrackk/providers/bus_location_provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:ui' as ui;
@@ -42,7 +43,6 @@ class _MapScreenState extends State<MapScreen> {
 
   late String _darkMapStyle;
   late Timer _timer;
-  //todo: cehcar pq esto no funciona
   late BitmapDescriptor markerIcon;
 
   Set<maps.Polyline> _polyline = {};
@@ -54,10 +54,9 @@ class _MapScreenState extends State<MapScreen> {
     _loadMapStyles();
     _setMapStyle();
     generarMarkers();
-    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (context.read<BusLocationProvider>().getBusLoc != null) {
-        generarBusMarkers();
-      }
+    //BUS LOCATION
+    _timer = Timer.periodic(Duration(seconds: 5), (timer) {
+      generarBusMarkers();
     });
   }
 
@@ -68,14 +67,11 @@ class _MapScreenState extends State<MapScreen> {
       zoom: 14.4746,
     );
 
-    BusLocationProvider busLocationProvider = BusLocationProvider();
-    await busLocationProvider.initFromFirebase();
-
     BitmapDescriptor.fromAssetImage(
             const ImageConfiguration(
-              size: Size(48, 48),
+              size: Size(40, 40),
             ),
-            'assets/images/autobus.png')
+            'assets/images/autobus2.png')
         .then((value) => markerIcon = value);
   }
 
@@ -122,23 +118,38 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  void generarBusMarkers() {
+  void generarBusMarkers() async{
     print('generarBusMarkers');
-    _marcadores.add(
-      maps.Marker(
-        icon: markerIcon,
-        markerId: const maps.MarkerId('0'),
-        position: maps.LatLng(
-            context.read<BusLocationProvider>().getBusLoc!.latitude!,
-            context
-                .read<BusLocationProvider>()
-                .getBusLoc!
-                .longitude!), // Latitud y longitud del nuevo marcador
-        infoWindow: const maps.InfoWindow(
-          title: 'Camionsito está aquí:)',
+    print(context.read<BusLocationProvider>().getBusLoc!.latitude!);
+
+    CollectionReference coordenadasUsuario =
+    FirebaseFirestore.instance.collection('coordenadasUsuario');
+
+    try{
+      DocumentSnapshot document =
+      await coordenadasUsuario.doc('bus').get();
+      var lat = document['lat'];
+      var lon = document['lon'];
+      print('doc: $document');
+      print('lat: $lat');
+      print('lon: $lon');
+
+      _marcadores.add(
+        maps.Marker(
+          icon: markerIcon,
+          markerId: const maps.MarkerId('0'),
+          position: maps.LatLng(
+              lat,
+              lon), // Latitud y longitud del nuevo marcador
+          infoWindow: const maps.InfoWindow(
+            title: 'Camionsito está aquí:)',
+          ),
         ),
-      ),
-    );
+      );
+      setState(() {});
+    }catch(e){
+      print('error en generarBusMarkers $e');
+    }
   }
 
   //DUDOSO
@@ -246,12 +257,12 @@ class _MapScreenState extends State<MapScreen> {
         ),
       ),
       body: SlidingUpPanel(
-        slideDirection: SlideDirection.DOWN,
+        slideDirection: SlideDirection.UP,
         backdropColor: Colors.pink,
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
         color: Colors.black54,
         border: const Border(
-            bottom: BorderSide(color:Colors.transparent, width: 3),
+            bottom: BorderSide(color: Colors.transparent, width: 3),
             left: BorderSide(color: Colors.transparent, width: 3),
             right: BorderSide(color: Colors.transparent, width: 3)),
         borderRadius: const BorderRadius.only(

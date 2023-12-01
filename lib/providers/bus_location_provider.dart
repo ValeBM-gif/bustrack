@@ -32,6 +32,7 @@ class BusLocationProvider with ChangeNotifier{
 
   void setBusLoc(loc){
     _busLoc=loc;
+    print('loc seteada $_busLoc');
     notifyListeners();
   }
 }

@@ -11,7 +11,6 @@ import 'package:google_places_flutter/model/prediction.dart';
 import 'constants.dart';
 import 'package:provider/provider.dart';
 
-
 String apiKey = 'AIzaSyAVmAwz26C4R61AE2vJfnT2uRif6CjepoY';
 LatLng? userLocation = LatLng(21.125012, -101.685966);
 LatLng? destinoLocation;
@@ -22,13 +21,21 @@ bool mostrarRuta = false;
 Ruta? rutaAMostrar;
 Prediction? prediccionElegida;
 
-void main()async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  final busLocationProviderProvider = BusLocationProvider();
-  runApp(MultiProvider(
-    providers: [ChangeNotifierProvider.value(value: busLocationProviderProvider),],
-    child: MyApp()));
+
+  final busLocationProvider = BusLocationProvider();
+  busLocationProvider.initFromFirebase();
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: busLocationProvider),
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -37,7 +44,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-
   void checkPermissions() async {
     print('entra a pedir permisos');
     Future<Position> getPosition() async {
@@ -77,7 +83,6 @@ class _MyAppState extends State<MyApp> {
     print('asigna user loc: ${pos.latitude}, ${pos.longitude}');
   }
 
-
   @override
   void initState() {
     checkPermissions();
@@ -92,13 +97,12 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     print('construye myapp, main con coordenadas ${userLocation}');
     return MaterialApp(
-      theme: ThemeData.dark(),
-      routes: {
-        '/rutas': (context) => RoutesScreen(),
-      },
-      debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      home: const HomeScreen()
-    );
+        theme: ThemeData.dark(),
+        routes: {
+          '/rutas': (context) => RoutesScreen(),
+        },
+        debugShowCheckedModeBanner: false,
+        title: 'Flutter Demo',
+        home: const HomeScreen());
   }
 }

@@ -57,18 +57,13 @@ class _BusScreenState extends State<BusScreen> {
   Future<void> initVariables() async {
     if (getCurrentLocation() != null) {
       busCurrentLocation = await getCurrentLocation();
+      print('bus current loc ${busCurrentLocation!.latitude}');
       context.read<BusLocationProvider>().setBusLoc(busCurrentLocation);
-      initialFakeLat = busCurrentLocation!.latitude!;
-      initialFakeLon = busCurrentLocation!.longitude!;
     }
 
-    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
       updateLocationToFirebase();
     });
-
-    // _timerFakeMovement = Timer.periodic(const Duration(seconds: 3), (timer) {
-    //   fakeChangeLocation();
-    // });
   }
 
   Future<LocationData?> getCurrentLocation() async {
@@ -104,8 +99,8 @@ class _BusScreenState extends State<BusScreen> {
             'lon': newLocation!.longitude,
             'timestamp': FieldValue.serverTimestamp(),
           });
-          context.read<BusLocationProvider>().setBusLoc(busCurrentLocation);
         }
+        context.read<BusLocationProvider>().setBusLoc(newLocation);
       }else{
         print('new location es null');
       }

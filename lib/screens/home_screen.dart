@@ -8,6 +8,7 @@ import 'package:bustrackk/screens/map_screen.dart';
 import 'package:bustrackk/widgets/home_ruta_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:google_places_flutter/model/prediction.dart';
+import 'package:provider/provider.dart';
 import '../constants.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -15,6 +16,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart' as maps;
 import 'package:http/http.dart' as http;
 
 import '../models/ruta.dart';
+import '../providers/bus_location_provider.dart';
 import '../widgets/rutas_list_view.dart';
 
 Future<List> getSugerenciasLugares(String input) async {
