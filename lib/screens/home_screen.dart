@@ -97,7 +97,18 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.symmetric(vertical: 10.0),
               child: GestureDetector(
                 onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context){return MapScreen(posicionCamara: userLocation!, deDondeProviene: 1, paradas: paradas,);},),);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return MapScreen(
+                          posicionCamara: userLocation!,
+                          deDondeProviene: 1,
+                          paradas: paradas,
+                        );
+                      },
+                    ),
+                  );
                 },
                 child: Container(
                   width: 40,
@@ -241,8 +252,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     await getPlaceDetails(prediction.placeId!);
                     print('ya paso getPlaceDetails');
 
-                    mostrarOpcionesRutas=true;
-                    prediccionElegida=prediction;
+                    mostrarOpcionesRutas = true;
+                    prediccionElegida = prediction;
                     print('prediccionElegida ya tiene algo $prediccionElegida');
                     setState(() {});
                     FocusManager.instance.primaryFocus?.unfocus();
@@ -279,40 +290,47 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             mostrarOpcionesRutas
-                ? prediccionElegida!=null?Column(
-                    children: [
-                      HomeRutaTile(
-                        ruta: rutas.firstWhere((element) => element.id==10),
-                        prediction: prediccionElegida!,
-                        coordenadasDestino: maps.LatLng(
-                          double.parse(prediccionElegida!.lat!),
-                          double.parse(prediccionElegida!.lng!),
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      HomeRutaTile(
-                        ruta: rutas.firstWhere((element) => element.id==11),
-                        prediction: prediccionElegida!,
-                        coordenadasDestino: maps.LatLng(
-                          double.parse(prediccionElegida!.lat!),
-                          double.parse(prediccionElegida!.lng!),
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      HomeRutaTile(
-                        ruta: rutas.firstWhere((element) => element.id==2),
-                        prediction: prediccionElegida!,
-                        coordenadasDestino: maps.LatLng(
-                          double.parse(prediccionElegida!.lat!),
-                          double.parse(prediccionElegida!.lng!),
-                        ),
-                      ),
-                    ],
-                  ):const Center(child: CircularProgressIndicator(),)
+                ? prediccionElegida != null
+                    ? Column(
+                        children: [
+                          HomeRutaTile(
+                            ruta:
+                                rutas.firstWhere((element) => element.id == 10),
+                            prediction: prediccionElegida!,
+                            coordenadasDestino: maps.LatLng(
+                              double.parse(prediccionElegida!.lat!),
+                              double.parse(prediccionElegida!.lng!),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          HomeRutaTile(
+                            ruta:
+                                rutas.firstWhere((element) => element.id == 11),
+                            prediction: prediccionElegida!,
+                            coordenadasDestino: maps.LatLng(
+                              double.parse(prediccionElegida!.lat!),
+                              double.parse(prediccionElegida!.lng!),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          HomeRutaTile(
+                            ruta:
+                                rutas.firstWhere((element) => element.id == 2),
+                            prediction: prediccionElegida!,
+                            coordenadasDestino: maps.LatLng(
+                              double.parse(prediccionElegida!.lat!),
+                              double.parse(prediccionElegida!.lng!),
+                            ),
+                          ),
+                        ],
+                      )
+                    : const Center(
+                        child: CircularProgressIndicator(),
+                      )
                 : Expanded(
                     child: Center(
                       child: Image.asset(

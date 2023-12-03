@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:bustrackk/providers/bus_location_provider.dart';
+import 'package:bustrackk/widgets/instruccion_separator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -14,6 +15,11 @@ import '../main.dart';
 import '../models/parada.dart';
 import '../models/ruta.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+
+import '../widgets/instruccion.dart';
+import '../widgets/rutas_list_view.dart';
+
+final pController = PanelController();
 
 class MapScreen extends StatefulWidget {
   final maps.LatLng posicionCamara;
@@ -44,6 +50,7 @@ class _MapScreenState extends State<MapScreen> {
   late String _darkMapStyle;
   late Timer _timer;
   late BitmapDescriptor markerIcon;
+  bool expandAddress = false;
 
   Set<maps.Polyline> _polyline = {};
 
@@ -118,16 +125,15 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  void generarBusMarkers() async{
+  void generarBusMarkers() async {
     print('generarBusMarkers');
-    print(context.read<BusLocationProvider>().getBusLoc!.latitude!);
+    //print(context.read<BusLocationProvider>().getBusLoc!.latitude!);
 
     CollectionReference coordenadasUsuario =
-    FirebaseFirestore.instance.collection('coordenadasUsuario');
+        FirebaseFirestore.instance.collection('coordenadasUsuario');
 
-    try{
-      DocumentSnapshot document =
-      await coordenadasUsuario.doc('bus').get();
+    try {
+      DocumentSnapshot document = await coordenadasUsuario.doc('bus').get();
       var lat = document['lat'];
       var lon = document['lon'];
       print('doc: $document');
@@ -138,16 +144,15 @@ class _MapScreenState extends State<MapScreen> {
         maps.Marker(
           icon: markerIcon,
           markerId: const maps.MarkerId('0'),
-          position: maps.LatLng(
-              lat,
-              lon), // Latitud y longitud del nuevo marcador
+          position:
+              maps.LatLng(lat, lon), // Latitud y longitud del nuevo marcador
           infoWindow: const maps.InfoWindow(
             title: 'Camionsito está aquí:)',
           ),
         ),
       );
       setState(() {});
-    }catch(e){
+    } catch (e) {
       print('error en generarBusMarkers $e');
     }
   }
@@ -237,45 +242,173 @@ class _MapScreenState extends State<MapScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        iconTheme: const IconThemeData(
-          color: Colors.white60, //change your color here
-        ),
-        title: SizedBox(
-          width: 250,
-          child: Text(
-            widget.deDondeProviene == 1
-                ? 'Paradas Cercanas'
-                : widget.deDondeProviene == 3
-                    ? 'Ruta ${widget.ruta!.nombre}'
-                    : widget.prediction!.description!,
-            style: const TextStyle(
-                color: Colors.white60,
-                fontSize: 16,
-                fontWeight: FontWeight.bold),
-          ),
-        ),
-      ),
       body: SlidingUpPanel(
+
+        controller: pController,
         slideDirection: SlideDirection.UP,
-        backdropColor: Colors.pink,
+        //backdropEnabled: true,
+        //backdropColor: Colors.pink,
+        //onPanelOpened: (){pController.},
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-        color: Colors.black54,
+        color: Colors.grey.shade900,
         border: const Border(
             bottom: BorderSide(color: Colors.transparent, width: 3),
             left: BorderSide(color: Colors.transparent, width: 3),
             right: BorderSide(color: Colors.transparent, width: 3)),
         borderRadius: const BorderRadius.only(
-            bottomRight: Radius.circular(25), bottomLeft: Radius.circular(25)),
-        minHeight: widget.deDondeProviene == 1 ? 0 : 20,
-        maxHeight: 240,
-        panel: Center(
-          child: Text('panel'),
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
         ),
+        minHeight: widget.deDondeProviene == 1 ? 0 : 80,
+        maxHeight: 550,
+        panel: pController.isAttached
+            ? pController.isPanelOpen
+                ? Center(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(
+                            height: 8,
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                  child: Container(
+                                color: kPrimaryColor,
+                                width: double.infinity,
+                                height: 2.5,
+                              )),
+                              const SizedBox(
+                                width: 8,
+                              ),
+                              Container(
+                                decoration: BoxDecoration(
+                                  border:
+                                      Border.all(color: kPrimaryColor, width: 2),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(5.0),
+                                  child: Icon(
+                                    Icons.directions_bus_filled_rounded,
+                                    color: kPrimaryColor,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 8,
+                              ),
+                              Expanded(
+                                  child: Container(
+                                color: kPrimaryColor,
+                                width: double.infinity,
+                                height: 2.5,
+                              )),
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 12,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(9),
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text('30 mins'),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8.0),
+                                      child: Container(
+                                        height: 20,
+                                        width: 3,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    Text('Hora estimada de llegada: 15:30'),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 5,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 15.0, vertical: 10),
+                            child: GestureDetector(
+                              onTap: () {
+                                expandAddress = !expandAddress;
+                              },
+                              child: Text(
+                                widget.deDondeProviene == 2
+                                    ? !expandAddress
+                                        ? widget.prediction!.description!.length >
+                                                46
+                                            ? '${widget.prediction!.description!.substring(0, 46)}...'
+                                            : widget.prediction!.description!
+                                        : widget.prediction!.description!
+                                    : '',
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 15,
+                          ),
+                            const Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Instruccion(texto: 'Caminar a tal shalalala',tiempo: '10 mins', icono: Icons.directions_walk,),
+                              InstruccionSeparator(),
+                              Instruccion(texto: 'Tomar ruta tal shalalala',tiempo: '15 mins',icono: Icons.arrow_forward_sharp),
+                              InstruccionSeparator(),
+                              Instruccion(texto: 'Tomar ruta tal2 shalalala',tiempo: '16 mins',icono: Icons.arrow_forward_sharp),
+                              InstruccionSeparator(),
+                              Instruccion(texto: 'Caminar a tal shalalala',tiempo: '2 mins',icono: Icons.directions_walk),
+                              InstruccionSeparator(),
+                              Text('Llegaste:)'),
+                              SizedBox(height: 40,),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : const SizedBox()
+            : const SizedBox(),
+        collapsed: Center(
+          child: Text(
+            widget.deDondeProviene == 1
+                ? 'Paradas Cercanas'
+                : widget.deDondeProviene == 3
+                    ? 'Ruta ${widget.ruta!.nombre}'
+                    : widget.prediction!.description!.length > 11
+                        ? '${widget.prediction!.description!.substring(0, 11)}...'
+                        : widget.prediction!.description!,
+            style: TextStyle(
+                color: Colors.grey.shade400,
+                fontSize: 24,
+                fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        //snapPoint: .5,
         body: maps.GoogleMap(
           onMapCreated: (maps.GoogleMapController controller) {
             _mapController.complete(controller);
           },
+          zoomControlsEnabled: false,
           polylines: _polyline,
           initialCameraPosition: _posicionCamara,
           markers: Set<maps.Marker>.of(_marcadores),
