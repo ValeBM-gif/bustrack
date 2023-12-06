@@ -6,16 +6,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:ui' as ui;
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as maps;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
 import 'package:provider/provider.dart';
 import '../constants.dart';
 import '../main.dart';
+import '../models/lugar.dart';
 import '../models/parada.dart';
 import '../models/ruta.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
-
+import 'dart:math';
 import '../widgets/instruccion.dart';
 import '../widgets/rutas_list_view.dart';
 
@@ -28,6 +30,7 @@ class MapScreen extends StatefulWidget {
   Ruta? ruta;
   Prediction? prediction;
   List<Parada>? paradas;
+  Lugar? lugar;
 
   MapScreen(
       {super.key,
@@ -35,6 +38,7 @@ class MapScreen extends StatefulWidget {
       this.ruta,
       this.prediction,
       required this.deDondeProviene,
+      this.lugar,
       this.paradas});
 
   @override
@@ -51,8 +55,17 @@ class _MapScreenState extends State<MapScreen> {
   late Timer _timer;
   late BitmapDescriptor markerIcon;
   bool expandAddress = false;
-
+  var textoPanel = '';
   Set<maps.Polyline> _polyline = {};
+
+  var selected1=true;
+  var selected2=false;
+  var selected3=false;
+  var avisame = true;
+
+  var latBus;
+  var lonBus;
+  var cercaniaBus;
 
   @override
   void initState() {
@@ -64,6 +77,19 @@ class _MapScreenState extends State<MapScreen> {
     //BUS LOCATION
     _timer = Timer.periodic(Duration(seconds: 5), (timer) {
       generarBusMarkers();
+      if(latBus!=null&&lonBus!=null){
+        if(checarCercaniaBus(userLocation!.latitude, userLocation!.longitude, latBus, lonBus)){
+          Fluttertoast.showToast(
+              msg: "Tu camión está a ${cercaniaBus.round()} metros",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.CENTER,
+              timeInSecForIosWeb: 1,
+              backgroundColor: Colors.white70,
+              textColor: Colors.white,
+              fontSize: 16.0
+          );
+        }
+      }
     });
   }
 
@@ -80,6 +106,11 @@ class _MapScreenState extends State<MapScreen> {
             ),
             'assets/images/autobus2.png')
         .then((value) => markerIcon = value);
+    if (widget.deDondeProviene == 2) {
+      textoPanel = widget.prediction!.description!;
+    } else if (widget.deDondeProviene == 3) {
+      textoPanel = '${widget.ruta!.nombre}, ${widget.ruta!.direccion}';
+    }
   }
 
   Future _loadMapStyles() async {
@@ -94,14 +125,16 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> generarMarkers() async {
-    if (widget.deDondeProviene == 2) {
+    if (widget.deDondeProviene == 2 || widget.deDondeProviene == 4) {
       _marcadores.add(
         maps.Marker(
           markerId: const maps.MarkerId('2'),
-          position:
-              _posicionCamara.target, // Latitud y longitud del nuevo marcador
+          position: maps.LatLng(
+            double.parse(widget.prediction!.lat!),
+            double.parse(widget.prediction!.lng!),
+          ), // Latitud y longitud del nuevo marcador
           infoWindow: maps.InfoWindow(
-            title: widget.prediction!.description,
+            title: textoPanel,
           ),
         ),
       );
@@ -125,6 +158,30 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
+
+  bool checarCercaniaBus(double userLat, double userLng, double busLat, double busLng) {
+    const double earthRadius = 6371000; // Radio de la Tierra en metros
+    double lat1Rad = userLat * (pi / 180);
+    double lng1Rad = userLng * (pi / 180);
+    double lat2Rad = busLat * (pi / 180);
+    double lng2Rad = busLng * (pi / 180);
+
+    double dLat = lat2Rad - lat1Rad;
+    double dLng = lng2Rad - lng1Rad;
+
+    double a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(lat1Rad) * cos(lat2Rad) * sin(dLng / 2) * sin(dLng / 2);
+
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+
+    double distance = earthRadius * c;
+    cercaniaBus = distance;
+    print(userLat);
+    print(userLng);
+    print('distancia $distance');
+    return distance <= 100;
+  }
+
   void generarBusMarkers() async {
     print('generarBusMarkers');
     //print(context.read<BusLocationProvider>().getBusLoc!.latitude!);
@@ -139,7 +196,8 @@ class _MapScreenState extends State<MapScreen> {
       print('doc: $document');
       print('lat: $lat');
       print('lon: $lon');
-
+      latBus=lat;
+      lonBus=lon;
       _marcadores.add(
         maps.Marker(
           icon: markerIcon,
@@ -236,19 +294,21 @@ class _MapScreenState extends State<MapScreen> {
         PointLatLng(widget.ruta!.posicion2!.latitude,
             widget.ruta!.posicion2!.longitude),
       );
-      if (widget.deDondeProviene == 2) {
-        //todo: hacer polyline de camino a tomar para llegar a destino
+      if (widget.deDondeProviene == 2 || widget.deDondeProviene == 4) {
+        getDirections(
+          PointLatLng(userLocation!.latitude, userLocation!.longitude),
+          PointLatLng(
+            double.parse(widget.prediction!.lat!),
+            double.parse(widget.prediction!.lng!),
+          ), // Latitud y longitud del nuevo marcador
+        );
       }
     }
 
     return Scaffold(
       body: SlidingUpPanel(
-
         controller: pController,
         slideDirection: SlideDirection.UP,
-        //backdropEnabled: true,
-        //backdropColor: Colors.pink,
-        //onPanelOpened: (){pController.},
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
         color: Colors.grey.shade900,
         border: const Border(
@@ -256,11 +316,11 @@ class _MapScreenState extends State<MapScreen> {
             left: BorderSide(color: Colors.transparent, width: 3),
             right: BorderSide(color: Colors.transparent, width: 3)),
         borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
+          topLeft: Radius.circular(30),
+          topRight: Radius.circular(30),
         ),
-        minHeight: widget.deDondeProviene == 1 ? 0 : 80,
-        maxHeight: 550,
+        minHeight: widget.deDondeProviene == 1 ? 0 : 50,
+        maxHeight: widget.deDondeProviene == 1 ? 0 : 550,
         panel: pController.isAttached
             ? pController.isPanelOpen
                 ? Center(
@@ -284,8 +344,8 @@ class _MapScreenState extends State<MapScreen> {
                               ),
                               Container(
                                 decoration: BoxDecoration(
-                                  border:
-                                      Border.all(color: kPrimaryColor, width: 2),
+                                  border: Border.all(
+                                      color: kPrimaryColor, width: 2),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: const Padding(
@@ -311,7 +371,8 @@ class _MapScreenState extends State<MapScreen> {
                             height: 12,
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 8.0),
                             child: Container(
                               decoration: BoxDecoration(
                                 border: Border.all(color: Colors.grey),
@@ -324,7 +385,7 @@ class _MapScreenState extends State<MapScreen> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text('30 mins'),
+                                    Text('18 mins'),
                                     Padding(
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 8.0),
@@ -334,7 +395,14 @@ class _MapScreenState extends State<MapScreen> {
                                         color: Colors.grey,
                                       ),
                                     ),
-                                    Text('Hora estimada de llegada: 15:30'),
+                                    DateTime.now().minute < 42
+                                        ? Text(
+                                            'Hora estimada de llegada: ${DateTime.now().hour}:${DateTime.now().minute + 18}')
+                                        : DateTime.now().minute + 18 - 60 < 10
+                                            ? Text(
+                                                'Hora estimada de llegada: ${DateTime.now().hour}:0${DateTime.now().minute + 18 - 60}')
+                                            : Text(
+                                                'Hora estimada de llegada: ${DateTime.now().hour}:${DateTime.now().minute + 18 - 60}')
                                   ],
                                 ),
                               ),
@@ -351,34 +419,65 @@ class _MapScreenState extends State<MapScreen> {
                                 expandAddress = !expandAddress;
                               },
                               child: Text(
-                                widget.deDondeProviene == 2
-                                    ? !expandAddress
-                                        ? widget.prediction!.description!.length >
-                                                46
-                                            ? '${widget.prediction!.description!.substring(0, 46)}...'
-                                            : widget.prediction!.description!
-                                        : widget.prediction!.description!
-                                    : '',
+                                !expandAddress
+                                    ? textoPanel.length > 46
+                                        ? '${textoPanel.substring(0, 46)}...'
+                                        : textoPanel
+                                    : textoPanel,
                                 textAlign: TextAlign.center,
+                                style: TextStyle(fontWeight: FontWeight.w500),
                               ),
                             ),
                           ),
                           const SizedBox(
                             height: 15,
                           ),
-                            const Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
+                           Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Instruccion(texto: 'Caminar a tal shalalala',tiempo: '10 mins', icono: Icons.directions_walk,),
+                              GestureDetector(
+                                onTap: (){selected1=true;
+                                selected2=false;
+                                selected3=false;},
+                                child: Instruccion(
+                                  texto: 'Caminar a parada',
+                                  tiempo: '1 min',
+                                  icono: Icons.directions_walk,
+                                  cosiSeleccionado: selected1,
+                                ),
+                              ),
                               InstruccionSeparator(),
-                              Instruccion(texto: 'Tomar ruta tal shalalala',tiempo: '15 mins',icono: Icons.arrow_forward_sharp),
+                              GestureDetector(
+                                onTap: (){selected1=false;
+                                selected2=true;
+                                selected3=false;},
+                                child: Instruccion(
+                                  texto: 'Tomar ruta L2',
+                                  tiempo: '15 mins',
+                                  icono: Icons.arrow_forward_sharp,
+                                  cosiSeleccionado: selected2,
+                                ),
+                              ),
                               InstruccionSeparator(),
-                              Instruccion(texto: 'Tomar ruta tal2 shalalala',tiempo: '16 mins',icono: Icons.arrow_forward_sharp),
+                              GestureDetector(
+                                onTap: (){selected1=false;
+                                selected2=false;
+                                selected3=true;},
+                                child: Instruccion(
+                                  texto: 'Caminar a destino',
+                                  tiempo: '2 mins',
+                                  icono: Icons.directions_walk,
+                                  cosiSeleccionado: selected3,
+                                ),
+                              ),
                               InstruccionSeparator(),
-                              Instruccion(texto: 'Caminar a tal shalalala',tiempo: '2 mins',icono: Icons.directions_walk),
-                              InstruccionSeparator(),
-                              Text('Llegaste:)'),
-                              SizedBox(height: 40,),
+                              Text('Llegaste:)',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16)),
+                              SizedBox(
+                                height: 40,
+                              ),
                             ],
                           ),
                         ],
@@ -387,21 +486,29 @@ class _MapScreenState extends State<MapScreen> {
                   )
                 : const SizedBox()
             : const SizedBox(),
-        collapsed: Center(
-          child: Text(
-            widget.deDondeProviene == 1
-                ? 'Paradas Cercanas'
-                : widget.deDondeProviene == 3
-                    ? 'Ruta ${widget.ruta!.nombre}'
-                    : widget.prediction!.description!.length > 11
-                        ? '${widget.prediction!.description!.substring(0, 11)}...'
-                        : widget.prediction!.description!,
-            style: TextStyle(
-                color: Colors.grey.shade400,
-                fontSize: 24,
-                fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
+        collapsed: Column(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                  color: kPrimaryColor,
+                  borderRadius: BorderRadius.circular(10)),
+              height: 3,
+              width: 60,
+            ),
+            const SizedBox(
+              height: 8,
+            ),
+            Center(
+              child: Text(
+                'Cómo llegar...',
+                style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
         ),
         //snapPoint: .5,
         body: maps.GoogleMap(

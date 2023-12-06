@@ -60,7 +60,7 @@ List<Ruta> rutas = [
       direccion: 'San Jerónimo - Delta por Blvr. Miguel Hidalgo',
       tipo: TipoDeRuta.troncal,
       posicion1: maps.LatLng(21.1512901, -101.71211448),
-      posicion2: maps.LatLng(21.1435029, -101.7021371)
+      posicion2: maps.LatLng(21.156024, -101.694192)
   ),
   Ruta(
       id: 3,

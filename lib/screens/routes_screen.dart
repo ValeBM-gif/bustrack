@@ -45,10 +45,9 @@ class _RoutesScreenState extends State<RoutesScreen> {
                 ),
               ),
               const SizedBox(height: 5,),
-              Expanded(
+              const Expanded(
                   child: RutasListView(
-                setRutaActual: () {},
-              )),
+              ),),
             ],
           ),
         ),

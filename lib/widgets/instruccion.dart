@@ -6,7 +6,8 @@ class Instruccion extends StatefulWidget {
   final tiempo;
   final texto;
   final IconData icono;
-  const Instruccion({super.key,required this.tiempo,required this.texto,required this.icono});
+  final cosiSeleccionado;
+  const Instruccion({super.key,required this.tiempo,required this.texto,required this.icono,required this.cosiSeleccionado});
 
   @override
   State<Instruccion> createState() => _InstruccionState();
@@ -18,7 +19,7 @@ class _InstruccionState extends State<Instruccion> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Container(
-        decoration: BoxDecoration(color: kSecondaryColor, border: Border.all(),borderRadius: BorderRadius.circular(9),),
+        decoration: BoxDecoration(color: widget.cosiSeleccionado==false? kSecondaryColor: Colors.white70, border: Border.all(),borderRadius: BorderRadius.circular(9),),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(

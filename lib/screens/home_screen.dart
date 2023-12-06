@@ -6,6 +6,7 @@ import 'package:bustrackk/models/parada.dart';
 import 'package:bustrackk/screens/loginBus_screen.dart';
 import 'package:bustrackk/screens/map_screen.dart';
 import 'package:bustrackk/widgets/home_ruta_tile.dart';
+import 'package:bustrackk/widgets/lista_busquedas_recientes.dart';
 import 'package:flutter/material.dart';
 import 'package:google_places_flutter/model/prediction.dart';
 import 'package:provider/provider.dart';
@@ -50,10 +51,12 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late maps.LatLng searchedLoc;
   bool mostrarOpcionesRutas = false;
+  bool busquedasRecientesExpanded = false;
 
   @override
   void initState() {
     super.initState();
+    mostrarOpcionesRutas = false;
   }
 
   Future<void> getPlaceDetails(String placeId) async {
@@ -90,11 +93,17 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        //backgroundColor: Colors.transparent,
         iconTheme: const IconThemeData(color: kIconsColor),
-        actions: [
-          GestureDetector(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10.0),
+        leading: Row(
+          children: [
+            const SizedBox(
+              width: 15,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 10.0,
+              ),
               child: GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -123,10 +132,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-          ),
-          const SizedBox(
-            width: 9,
-          ),
+          ],
+        ),
+        actions: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 10.0),
             child: GestureDetector(
@@ -146,20 +154,15 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          SizedBox(
+          const SizedBox(
             width: 12,
           ),
         ],
       ),
       backgroundColor: colorScaffold,
       resizeToAvoidBottomInset: false,
-      drawer: Drawer(
-        child: Container(
-          width: 200,
-        ),
-      ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -167,16 +170,25 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Bustrack',
-                        textAlign: TextAlign.start,
-                        style: kTextStyleTitles,
+                      const SizedBox(
+                        height: 15,
                       ),
-                      Text(
+                      GestureDetector(
+                        onTap: () {
+                          mostrarOpcionesRutas = false;
+                          setState(() {});
+                        },
+                        child: const Text(
+                          'Bustrack',
+                          textAlign: TextAlign.start,
+                          style: kTextStyleTitles,
+                        ),
+                      ),
+                      const Text(
                         'Movilidad eficiente para ti.',
                         style: TextStyle(
                             letterSpacing: 1,
@@ -185,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w500),
                         textAlign: TextAlign.start,
                       ),
-                      SizedBox(
+                      const SizedBox(
                         height: 20,
                       ),
                     ],
@@ -303,7 +315,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           const SizedBox(
-                            height: 10,
+                            height: 12,
                           ),
                           HomeRutaTile(
                             ruta:
@@ -315,7 +327,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           const SizedBox(
-                            height: 10,
+                            height: 12,
                           ),
                           HomeRutaTile(
                             ruta:
@@ -331,12 +343,61 @@ class _HomeScreenState extends State<HomeScreen> {
                     : const Center(
                         child: CircularProgressIndicator(),
                       )
-                : Expanded(
-                    child: Center(
-                      child: Image.asset(
-                        'assets/images/parada.png',
-                        height: 230,
-                        width: 230,
+                : Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                    child: SingleChildScrollView(
+                      child: Container(
+                        height: MediaQuery.of(context).size.height * .6,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            Text(
+                              'Búsquedas Recientes',
+                              style: kTextStyleTitles.copyWith(fontSize: 24),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                busquedasRecientesExpanded =
+                                    !busquedasRecientesExpanded;
+                                setState(() {});
+                              },
+                              child: Text(
+                                !busquedasRecientesExpanded
+                                    ? 'Ver todas...'
+                                    : 'Ver menos...',
+                                style: const TextStyle(
+                                    decoration: TextDecoration.underline,
+                                    color: kSecondaryColor,
+                                    decorationColor: kSecondaryColor),
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 15,
+                            ),
+                            SizedBox(
+                              height: busquedasRecientesExpanded ? 270 : 100,
+                              child: GestureDetector(
+                                  onTap: () {
+                                    mostrarOpcionesRutas = true;
+                                    setState(() {});
+                                  },
+                                  child: const ListaBusquedasRecientes()),
+                            ),
+                            const SizedBox(
+                              height: 15,
+                            ),
+                            Center(
+                              child: Image.asset(
+                                'assets/images/parada.png',
+                                height: busquedasRecientesExpanded ? 100 : 230,
+                                width: busquedasRecientesExpanded ? 100 : 230,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
