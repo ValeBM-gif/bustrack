@@ -27,54 +27,57 @@ class _RutasListViewState extends State<RutasListView> {
         final ruta = rutas[index];
         return Column(
           children: [
-            ListTile(
-              onTap: () {
-                print('que ruta hay? ${ruta.nombre}');
-                //todo: fix navigator
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return MapScreen(
-                        posicionCamara: LatLng(
-                            (ruta.posicion1!.latitude +
-                                    ruta.posicion2!.latitude) /
-                                2,
-                            (ruta.posicion1!.longitude +
-                                    ruta.posicion2!.longitude) /
-                                2),
-                        deDondeProviene: 3,
-                        ruta: ruta,
-                      );
-                    },
-                  ),
-                );
-              },
-              leading: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.directions_bus,
-                  ),
-                  Container(
-                    color: getIconColor(
-                      ruta.tipo!,
-                      ruta.nombre!,
+            Container(
+              color: Colors.white10,
+              child: ListTile(
+                onTap: () {
+                  print('que ruta hay? ${ruta.nombre}');
+                  //todo: fix navigator
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return MapScreen(
+                          posicionCamara: LatLng(
+                              (ruta.posicion1!.latitude +
+                                      ruta.posicion2!.latitude) /
+                                  2,
+                              (ruta.posicion1!.longitude +
+                                      ruta.posicion2!.longitude) /
+                                  2),
+                          deDondeProviene: 3,
+                          ruta: ruta,
+                        );
+                      },
                     ),
-                    height: 3,
-                    width: 20,
-                  )
-                ],
+                  );
+                },
+                leading: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.directions_bus,
+                    ),
+                    Container(
+                      color: getIconColor(
+                        ruta.tipo!,
+                        ruta.nombre!,
+                      ),
+                      height: 3,
+                      width: 20,
+                    )
+                  ],
+                ),
+                title: Text(ruta.nombre!),
+                subtitle: Text(ruta.direccion),
+                trailing: Text(
+                  '${calcularTiempoLlegadaDestino()} mins',
+                  //style: const TextStyle(color: Colors.transparent),
+                ),
+                style: ListTileStyle.drawer,
               ),
-              title: Text(ruta.nombre!),
-              subtitle: Text(ruta.direccion),
-              trailing: Text(
-                '${calcularTiempoLlegadaDestino()} mins',
-                //style: const TextStyle(color: Colors.transparent),
-              ),
-              style: ListTileStyle.drawer,
             ),
-            Divider(),
+            Container(color: Colors.white10,child: Divider()),
           ],
         );
       },

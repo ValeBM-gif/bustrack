@@ -1,7 +1,6 @@
 import 'package:bustrackk/models/ruta.dart';
 import 'package:bustrackk/providers/bus_location_provider.dart';
 import 'package:bustrackk/screens/home_screen.dart';
-import 'package:bustrackk/screens/map_screen.dart';
 import 'package:bustrackk/screens/routes_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +11,7 @@ import 'constants.dart';
 import 'package:provider/provider.dart';
 
 String apiKey = 'AIzaSyAVmAwz26C4R61AE2vJfnT2uRif6CjepoY';
-LatLng? userLocation = LatLng(21.125012, -101.685966);
+LatLng? userLocation = const LatLng(21.125012, -101.685966);
 LatLng? destinoLocation;
 LatLng? inicioRuta;
 LatLng? finRuta;

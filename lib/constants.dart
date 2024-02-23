@@ -14,6 +14,6 @@ TextStyle kTextStyleExtrasFinder = TextStyle(
 const Color kPrimaryColor = Color(0xff5EA5E6);
 const Color kTransparentColor = Color(0x025EA5E6);
 const Color kSecondaryColor = Color(0xffFF7E47);
-const Color colorScaffold = Color(0xff333333);
+const Color colorScaffold = Colors.white12;
 const Color kIconsColor = Colors.white70;
 

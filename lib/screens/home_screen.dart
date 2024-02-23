@@ -52,6 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late maps.LatLng searchedLoc;
   bool mostrarOpcionesRutas = false;
   bool busquedasRecientesExpanded = false;
+   maps.LatLng coordsDestinoBarraBusqueda = maps.LatLng(21.156024, -101.694192);
 
   @override
   void initState() {
@@ -93,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        //backgroundColor: Colors.transparent,
+        backgroundColor: Colors.black87,
         iconTheme: const IconThemeData(color: kIconsColor),
         leading: Row(
           children: [
@@ -267,6 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     mostrarOpcionesRutas = true;
                     prediccionElegida = prediction;
                     print('prediccionElegida ya tiene algo $prediccionElegida');
+                    //coordsDestinoBarraBusqueda = maps.LatLng(double.parse(prediccionElegida!.lat!), double.parse(prediccionElegida!.lat!));
                     setState(() {});
                     FocusManager.instance.primaryFocus?.unfocus();
                     //Navigator.pushNamed(context, '/mapa');
@@ -315,7 +317,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           const SizedBox(
-                            height: 12,
+                            height: 16,
                           ),
                           HomeRutaTile(
                             ruta:
@@ -327,7 +329,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           const SizedBox(
-                            height: 12,
+                            height: 16,
                           ),
                           HomeRutaTile(
                             ruta:

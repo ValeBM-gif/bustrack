@@ -61,7 +61,7 @@ class _BusScreenState extends State<BusScreen> {
       context.read<BusLocationProvider>().setBusLoc(busCurrentLocation);
     }
 
-    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       updateLocationToFirebase();
     });
   }

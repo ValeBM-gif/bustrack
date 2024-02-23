@@ -58,36 +58,41 @@ class _MapScreenState extends State<MapScreen> {
   var textoPanel = '';
   Set<maps.Polyline> _polyline = {};
 
-  var selected1=true;
-  var selected2=false;
-  var selected3=false;
+  var selected1 = true;
+  var selected2 = false;
+  var selected3 = false;
   var avisame = true;
 
   var latBus;
   var lonBus;
   var cercaniaBus;
+  bool mostrarToast = true;
+
+  late FToast fToast;
+
+  var tiempoLlegadaBusAMi;
 
   @override
   void initState() {
     super.initState();
+    fToast = FToast();
+    fToast.init(context);
     inicializarDatosMapa();
     _loadMapStyles();
     _setMapStyle();
     generarMarkers();
     //BUS LOCATION
-    _timer = Timer.periodic(Duration(seconds: 5), (timer) {
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       generarBusMarkers();
-      if(latBus!=null&&lonBus!=null){
-        if(checarCercaniaBus(userLocation!.latitude, userLocation!.longitude, latBus, lonBus)){
-          Fluttertoast.showToast(
-              msg: "Tu camión está a ${cercaniaBus.round()} metros",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.CENTER,
-              timeInSecForIosWeb: 1,
-              backgroundColor: Colors.white70,
-              textColor: Colors.white,
-              fontSize: 16.0
-          );
+      if (mostrarToast) {
+        if (latBus != null && lonBus != null) {
+          if (checarCercaniaBus(userLocation!.latitude, userLocation!.longitude,
+              latBus, lonBus)) {
+            _showToast(
+                "Tu camión está a ${cercaniaBus.round()} metros aprox,\n llega en $tiempoLlegadaBusAMi segundos aprox.");
+            //, llega en $tiempoLlegadaBusAMi segundos aprox.
+            mostrarToast = false;
+          }
         }
       }
     });
@@ -124,6 +129,51 @@ class _MapScreenState extends State<MapScreen> {
     controller.setMapStyle(_darkMapStyle);
   }
 
+  _showToast(texto) {
+    Widget toast = Container(
+      //height: 60,
+      width: 280,
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20.0),
+        color: Colors.white70,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.bus_alert_rounded,
+            color: Colors.grey.shade800,
+          ),
+          const SizedBox(
+            width: 8.0,
+          ),
+          Text(
+            texto,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+                color: Colors.grey.shade800,
+                fontWeight: FontWeight.bold,
+                fontSize: 12),
+          ),
+        ],
+      ),
+    );
+
+    // Custom Toast Position
+    fToast.showToast(
+        child: toast,
+        toastDuration: const Duration(seconds: 10),
+        positionedToastBuilder: (context, child) {
+          return Positioned(
+            child: child,
+            top: 20.0,
+            left: 50.0,
+          );
+        });
+  }
+
   Future<void> generarMarkers() async {
     if (widget.deDondeProviene == 2 || widget.deDondeProviene == 4) {
       _marcadores.add(
@@ -158,8 +208,8 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-
-  bool checarCercaniaBus(double userLat, double userLng, double busLat, double busLng) {
+  bool checarCercaniaBus(
+      double userLat, double userLng, double busLat, double busLng) {
     const double earthRadius = 6371000; // Radio de la Tierra en metros
     double lat1Rad = userLat * (pi / 180);
     double lng1Rad = userLng * (pi / 180);
@@ -179,6 +229,9 @@ class _MapScreenState extends State<MapScreen> {
     print(userLat);
     print(userLng);
     print('distancia $distance');
+
+    tiempoLlegadaBusAMi = (distance / 5).round();
+
     return distance <= 100;
   }
 
@@ -196,8 +249,8 @@ class _MapScreenState extends State<MapScreen> {
       print('doc: $document');
       print('lat: $lat');
       print('lon: $lon');
-      latBus=lat;
-      lonBus=lon;
+      latBus = lat;
+      lonBus = lon;
       _marcadores.add(
         maps.Marker(
           icon: markerIcon,
@@ -342,17 +395,24 @@ class _MapScreenState extends State<MapScreen> {
                               const SizedBox(
                                 width: 8,
                               ),
-                              Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                      color: kPrimaryColor, width: 2),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: const Padding(
-                                  padding: EdgeInsets.all(5.0),
-                                  child: Icon(
-                                    Icons.directions_bus_filled_rounded,
-                                    color: kPrimaryColor,
+                              GestureDetector(
+                                onTap: () {
+                                  checarCercaniaBus(userLocation!.latitude, userLocation!.longitude,
+                                      latBus, lonBus);
+                                  _showToast("Tu camión está a ${cercaniaBus.round()} metros aprox,\n llega en $tiempoLlegadaBusAMi segundos aprox.");
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: kPrimaryColor, width: 2),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(5.0),
+                                    child: Icon(
+                                      Icons.directions_bus_filled_rounded,
+                                      color: kPrimaryColor,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -432,13 +492,15 @@ class _MapScreenState extends State<MapScreen> {
                           const SizedBox(
                             height: 15,
                           ),
-                           Column(
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               GestureDetector(
-                                onTap: (){selected1=true;
-                                selected2=false;
-                                selected3=false;},
+                                onTap: () {
+                                  selected1 = true;
+                                  selected2 = false;
+                                  selected3 = false;
+                                },
                                 child: Instruccion(
                                   texto: 'Caminar a parada',
                                   tiempo: '1 min',
@@ -448,9 +510,11 @@ class _MapScreenState extends State<MapScreen> {
                               ),
                               InstruccionSeparator(),
                               GestureDetector(
-                                onTap: (){selected1=false;
-                                selected2=true;
-                                selected3=false;},
+                                onTap: () {
+                                  selected1 = false;
+                                  selected2 = true;
+                                  selected3 = false;
+                                },
                                 child: Instruccion(
                                   texto: 'Tomar ruta L2',
                                   tiempo: '15 mins',
@@ -460,9 +524,11 @@ class _MapScreenState extends State<MapScreen> {
                               ),
                               InstruccionSeparator(),
                               GestureDetector(
-                                onTap: (){selected1=false;
-                                selected2=false;
-                                selected3=true;},
+                                onTap: () {
+                                  selected1 = false;
+                                  selected2 = false;
+                                  selected3 = true;
+                                },
                                 child: Instruccion(
                                   texto: 'Caminar a destino',
                                   tiempo: '2 mins',

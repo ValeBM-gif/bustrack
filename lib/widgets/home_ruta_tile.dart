@@ -95,7 +95,7 @@ class _HomeRutaTileState extends State<HomeRutaTile> {
               ),
             ),
             Text(
-              '${widget.ruta.nombre!='L2'?calcularTiempoLlegadaDestino():18} mins',
+              '${widget.ruta.nombre=='L2'?18:widget.ruta.nombre=='A-82'?32:24} mins',
               style: const TextStyle(color: kIconsColor),
             ),
             const SizedBox(
